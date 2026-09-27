@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Redirecting</title>
+  <style>
+    :root {
+      --bg: #f5f6f8;
+      --card: #ffffff;
+      --text: #1a1d21;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --accent: #1a1d21;
+      --accent-text: #ffffff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0d0f12;
+        --card: #15181c;
+        --text: #e8eaed;
+        --muted: #8b929c;
+        --border: #23262b;
+        --accent: #e8eaed;
+        --accent-text: #0d0f12;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .wrap { width: 100%; max-width: 460px; padding: 24px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px 28px;
+      text-align: center;
+    }
+    .label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      margin: 0 0 12px;
+    }
+    .count {
+      font-size: 56px;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      margin: 0 0 20px;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+    }
+    .url {
+      font-size: 13px;
+      color: var(--muted);
+      word-break: break-all;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      margin: 0 0 24px;
+      line-height: 1.5;
+    }
+    .go {
+      display: block;
+      width: 100%;
+      padding: 14px 20px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--accent-text);
+      background: var(--accent);
+      border: none;
+      border-radius: 10px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: opacity 0.2s ease;
+    }
+    .go:hover { opacity: 0.85; }
+    .go:active { opacity: 0.7; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <p class="label">Переход через</p>
+      <div class="count" id="count">5</div>
+      <div class="url" id="target">—</div>
+      <a class="go" id="go" href="#">Перейти сейчас</a>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var raw = null;
+
+      try { raw = sessionStorage.getItem("redirect_url"); } catch (e) {}
+
+      var search = window.location.search;
+      var hash   = window.location.hash;
+
+      if (!raw && search && search.indexOf("url=") !== -1) {
+        raw = new URLSearchParams(search).get("url");
+      }
+      if (!raw && hash && hash.indexOf("url=") !== -1) {
+        raw = hash.slice(1).split("url=")[1].split("&")[0];
+      }
+
+      var targetEl = document.getElementById("target");
+      var goEl     = document.getElementById("go");
+      var countEl  = document.getElementById("count");
+
+      if (!raw) {
+        targetEl.textContent = "Адрес не указан";
+        countEl.textContent  = "—";
+        goEl.style.display   = "none";
+        return;
+      }
+
+      var url = raw;
+      try { url = decodeURIComponent(url); } catch (e) {}
+      try { url = decodeURIComponent(url); } catch (e) {}
+
+      targetEl.textContent = url;
+      goEl.href = url;
+
+      var left = 5;
+      countEl.textContent = left;
+
+      var tick = setInterval(function () {
+        left -= 1;
+        countEl.textContent = left;
+        if (left <= 0) {
+          clearInterval(tick);
+          try { sessionStorage.removeItem("redirect_url"); } catch (e) {}
+          window.location.href = url;
+        }
+      }, 1000);
+    })();
+  </script>
+</body>
+</html>
